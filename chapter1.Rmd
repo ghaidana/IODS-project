@@ -1,13 +1,17 @@
 
-# About the project
-
-*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
-
+# Assignment 1
 ```{r}
-# This is a so-called "R chunk" where you can write R code.
-
 date()
-
 ```
-The text continues here.
+
+Hello! My name is Ghaida, you can also call me Gege. I am a first year master's student at University of Helsinki's Contemporary Societies program. \
+I am feeling quite well today. I hope I will be able to use R more comfortably after this course!\
+I actually took this course last year from the MOOC, but I did not get to do the peer review part because I did it outside of the planned schedule... \
+I first found this course last year when I was hunting for a master's program. I decided to take the course to get 'a try' on a learning experience at the University of Helsinki.\
+As I have taken the Quantitative Research Skill course last period, I have already done skimming the R for Health Data Science book, but it was nice to do a quick review. It was a lot of materials for sure! My favorite part is creating plots!\
+
+Here's my Github link: https://github.com/ghaidana/IODS-project
+
+
+
 
