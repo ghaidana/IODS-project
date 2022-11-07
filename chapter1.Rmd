@@ -3,15 +3,20 @@
 ```{r}
 date()
 ```
+> 
+<span style = "color:green; font-weight: 700; font-size:20px">
+Hello! My name is Ghaida, you can also call me Gege. I am a first year master's student at University of Helsinki's <mark>Contemporary Societies program.</mark> \
+</span>
 
-Hello! My name is Ghaida, you can also call me Gege. I am a first year master's student at University of Helsinki's Contemporary Societies program. \
-I am feeling quite well today. I hope I will be able to use R more comfortably after this course!\
-I actually took this course last year from the MOOC, but I did not get to do the peer review part because I did it outside of the planned schedule... \
-I first found this course last year when I was hunting for a master's program. I decided to take the course to get 'a try' on a learning experience at the University of Helsinki.\
-As I have taken the Quantitative Research Skill course last period, I have already done skimming the R for Health Data Science book, but it was nice to do a quick review. It was a lot of materials for sure! My favorite part is creating plots!\
+* I am feeling quite well today. I hope I will be able to use R more comfortably after this course!\
+* I actually took this course last year from the MOOC, but I did not get to do the peer review part because I did it outside of the planned schedule... \
+* I first found this course last year when I was hunting for a master's program. I decided to take the course to get 'a try' on a learning experience at the University of Helsinki.\
+* As I have taken the Quantitative Research Skill course last period, I have already done skimming the R for Health Data Science book, but it was nice to do a quick review. It was a lot of materials for sure! However, I like the active reading approach. My favorite part is creating plots! The most difficult part is probably data wrangling because so many things can go wrong.\
 
-Here's my Github link: https://github.com/ghaidana/IODS-project
-
-
+> 
+<span style = "color:green; font-weight: 700; font-size:15px">
+<mark>[Click here to visit my Github page!](https://github.com/ghaidana/IODS-project)</mark>\
+<mark>[Click here to see my Learning Diary!](https://ghaidana.github.io/IODS-project/)</mark>
+</span>
 
 
