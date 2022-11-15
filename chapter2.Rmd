@@ -1,13 +1,95 @@
-# Insert chapter 2 title here
+# Assignment 2: Regression and Model Validation
 
-*Describe the work you have done this week and summarize your learning.*
-
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
+-   This week, we are learning about regression and model validation. In this exercise, we are using a data from the International Survey of Approaches to Learning. In this survey, the students were asked to assess themselves on the scale of 1-5 about various statements related to their learning (ex: "I organize my study time carefully to make the best use of it"). The questions could be classified into three different learning approaches: strategic learning, surface learning, and deep learning. Beside the questions about the student's learning approach, the data also includes questions about the student's attitude on statistics, age, exam points, and gender.
+-   We have wrangled the original data to obtain a new dataframe which contains the students' average assessment score for each learning approaches, average attitude towards statistics, and their personal data.
+-   In this report, we will use the new dataframe to analyze the relationship between the variables.
 
 ```{r}
 date()
 ```
 
-Here we go again...
+## Reading the data
+
+```{r, warning=FALSE, message=FALSE}
+data <- read.csv(file = "learning2014.csv", sep=",", header = TRUE)
+```
+
+## Examining the structure and dimension of the data
+
+```{r}
+dim(data)
+str(data)
+```
+
+The data has 166 observations and 7 variables, which are:
+
+| Variable name | Description                                                              |
+|----------------------|--------------------------------------------------|
+| gender        | Gender of the student (character, F/M)                                   |
+| Age           | Age of the students in years (integer)                                   |
+| attitude      | The average score of the student's attitude towards statistics (numeric) |
+| deep          | The student's average score on deep learning approach (numeric)          |
+| stra          | The student's average score on strategic learning approach (numeric)     |
+| surf          | The student's average score on surface learning approach                 |
+| Points        | The student's exam points (integer)                                      |
+
+## Overview of the data
+
+```{r, warning=FALSE, message=FALSE}
+#accessing the libraries
+library(ggplot2)
+library(GGally)
+```
+
+```{r}
+#drawing scatter plot matrix
+ggpairs(data, mapping = aes(col=gender, alpha=0.3), lower = list(combo = wrap("facethist", bins = 20)))
+```
+
+The data for female students are represented in pink, while the data for male students are represented in green. The frequency graph shows us that we have a lot more data from female students. The students' age has a highly skewed distribution graph, which tells us that most of the students are on the younger side, but there are a few much older students as well. We can see that the student's attitude towards statistics are moderately positively correlated with their exam points, which is not surprising. An interesting correlation can be seen between surface and deep learning scores. The two variables have a negative correlation, which means that students who score higher on surface learning tend to score lower in deep learning, and vice versa. However, a moderately high negative correlation is only observed in male students, not in female students. A similar phenomenon can also be observed between surface learning score and the students' attitude towards statistics.
+
+```{r}
+summary(data)
+```
+
+Here, we can see the descriptive statistics of each variable in the data. The students' age ranges from 17 to 55 years, while the average is 25.5 years old. The students' attitude towards statistics averages at 3.14, which means that the students have a slightly more positive attitude towards statistics in general. Among the three learning approaches, deep learning has the highest average score while surface learning has the lowest average score. Meanwhile, the students' exam point ranges from 7 to 33 and averages at 22.7.
+
+## Building the model
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+```
+
+```{r}
+#3 variables as explanatory variables
+fit <- data %>%
+  lm(Points ~ attitude + stra + deep , data = .)
+summary(fit)
+```
+
+The low p-value and positive estimate suggest that the student's attitude towards statistics is significantly and positively related to their exam points. We also found an evidence of a positive relationship between the students' strategic learning score and their exam points (p-value = 0.075, significant at the 0.1 level). However, we did not find any evidence of a relationship between the students' deep learning score and their exam points. Next, we will remove this variable and fit the model again without it.
+
+```{r}
+#remove insignificant variable
+fit2 <- data %>%
+  lm(Points ~ attitude + stra, data = .)
+summary(fit2)
+```
+
+We obtained a similar result with the previous model. With a very low p-value, the students' attitude towards statistics was still found to be a highly significant predictor of their exam point. The students' exam score increases by 3.46 points on average with each increase in the students' attitude score, assuming that their strategic learning score remains constant. Meanwhile, the students' strategic learning score was found to be significant at 0.1 level (p-value = 0.08). The student's exam score increases by 0.91 points on average with each increase in the students' strategic learning score, assuming that their attitude score remains constant. In another word, students who have a more positive attitude towards statistics and/or practices strategic learning approach tend to have a higher exam point.
+
+The adjusted R-squared of this model was 0.1951, which means that this model explains about 19.51 percent of the variations in the student's exam point. Considering that this is a very simple model, this is already a quite high R-squared value.
+
+## Diagnostics
+
+In linear regression, we assume a linear correlation between the variables, and the error term/residual is normally distributed. We also assume that the variance of the residuals are equal across all predicted values (homoscedasticity). The residuals vs. fitted values plot and the Q-Q plot can be used to check these assumptions.
+
+```{r}
+plot(fit2, which = c(1, 2, 5))
+```
+
+In the residuals vs. fitted values plot, we can see that the residuals seem to be randomly scattered. It does not seem to display any concerning patterns, such as a curve (suggesting non-linearity) or a trombone pattern (suggesting heteroscedasticity). Based on this plot, it seems that the data is linear and homoscedastic (the variance of the residuals tend to be equal across all predicted values).
+
+The Q-Q plot compares the standardized residuals to their theoretical quantiles (the values they should have if the normality assumption is fulfilled). If the assumption is fulfilled, the points should fall across the straight line. In this plot, we can see that the points seem to form a slight upward curve. This means that the distribution of the residuals are actually a bit left skewed.
+
+The residuals vs leverage plot is used to check if there is any outliers that might affect the model heavily. There seem to be several extreme values in the data, but none of them fall outside of the Cook's distance line, so they are not necessarily considered to be influential to the model.
