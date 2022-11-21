@@ -24,7 +24,7 @@ str(data)
 The data has 166 observations and 7 variables, which are:
 
 | Variable name | Description                                                              |
-|----------------------|--------------------------------------------------|
+|---------------|--------------------------------------------------------------------------|
 | gender        | Gender of the student (character, F/M)                                   |
 | Age           | Age of the students in years (integer)                                   |
 | attitude      | The average score of the student's attitude towards statistics (numeric) |

@@ -1,0 +1,382 @@
+# Assignment 3: Logistic Regression
+
+```{r}
+date()
+```
+
+## Setting up
+
+### Reading the data
+
+```{r, warning=FALSE, message=FALSE}
+data <- read.csv(file = "alc.csv", sep=",", header = TRUE)
+```
+
+### Explaining the data
+
+```{r}
+#printing out the variables name
+colnames(data)
+```
+
+This week, we are working with the "Student Performance Data Set" from the UCI Machine Learning Repository. This data was made to study student performance. It contains 35 variables from 370 students in two Portugese high schools. The data was collected from school reports and questionnaires. The variables in this data include:
+
+| Variable Name | Description                                                                                                                                            |
+|----------------|--------------------------------------------------------|
+| school        | The student's school ("GP" (Gabriel Pereira) or "MS" (Mousinho da Silveira))                                                                           |
+| sex           | The student's sex ("F" or "M")                                                                                                                         |
+| age           | The student's age (numeric from 15-22)                                                                                                                 |
+| address       | The student's home address type ("U" (urban) or "R" (rural))                                                                                           |
+| famsize       | The student's family size ("LE3" (\<=3) or "GT3" (\>3))                                                                                                |
+| Pstatus       | The parent's cohabitation status ("T" (living together) or "A" (apart))                                                                                |
+| Medu          | The mother's education level ("0" (no education), "1" (up to 4th grade), "2" (5th to 9th grade), "3" (secondary education), or "4" (higher education)) |
+| Fedu          | The father's education level ("0" (no education), "1" (up to 4th grade), "2" (5th to 9th grade), "3" (secondary education), or "4" (higher education)) |
+| Mjob          | The mother's job ("teacher", "health" related, civil "services" (e.g. administrative or police), "at_home", or "other"                                 |
+| Fjob          | The father's job ("teacher", "health" related, civil "services" (e.g. administrative or police), "at_home", or "other"                                 |
+| reason        | The reason for choosing the school (close to "home", school "reputation", "course" preference, or "other")                                             |
+| guardian      | The student's guardian ("mother", "father", or "other")                                                                                                |
+| traveltime    | Home to school travel time ("1" (\<15 min), "2" (15 to 30 min), "3" (30 min. to 1 hour), or "4" (\>1 hour))                                            |
+| studytime     | Time spent on studying weekly ("1" (\<2 hours), "2" (2 to 5 hours), "3" (5 to 10 hours), or "4" (\>10 hours))                                          |
+| failures      | Number of past class failures (numeric from 1-4 where 4 includes 4 or more classes)                                                                    |
+| schoolsup     | Extra educational support ("yes" or "no")                                                                                                              |
+| famsup        | Family educational support ("yes" or "no")                                                                                                             |
+| paid          | Extra paid classes within the course subject ("yes" or "no")                                                                                           |
+| activities    | Extracurricular activities ("yes" or "no")                                                                                                             |
+| nursery       | Attended nursery school ("yes" or "no")                                                                                                                |
+| higher        | Wants to take higher education ("yes" or "no")                                                                                                         |
+| internet      | Availability of internet access at home ("yes" or "no")                                                                                                |
+| romantic      | In a romantic relationship ("yes" or "no")                                                                                                             |
+| famrel        | Quality of family relationship (numeric from 1 (very bad) to 5 (excellent))                                                                            |
+| freetime      | Free time after school (numeric from 1 (very low) to 5 (very high))                                                                                    |
+| goout         | Going out with friends (numeric from 1 (very low) to 5 (very high))                                                                                    |
+| Dalc          | Workday alcohol consumption (numeric from 1 (very low) to 5 (very high))                                                                               |
+| Walc          | Weekend alcohol consumption (numeric from 1 (very low) to 5 (very high))                                                                               |
+| health        | Current health status (numeric from 1 (very bad) to 5 (very good))                                                                                     |
+| absences      | Number of school absences (numeric from 0-93)                                                                                                          |
+| G1            | First period grade (numeric from 0-20)                                                                                                                 |
+| G2            | Second period grade (numeric from 0-20)                                                                                                                |
+| G3            | Final grade (numeric from 0-20)                                                                                                                        |
+| alc_use       | Average alcohol use in both weekend (Walc) and weekdays (Dalc) (between 1-5)                                                                           |
+| high_use      | High use of alcohol ("TRUE" (alc_use \>2) or "FALSE" (alc_use \<=2)                                                                                    |
+
+## Formulating the hypothesis
+
+1.  Male students (sex) tend to have higher alcohol consumption (high_use)
+
+2.  Students with more school absences (absences) would tend to have higher alcohol consumption (high_use)
+
+3.  Students who spend less time studying (studytime) would tend to have higher alcohol consumption (high_use)
+
+4.  Students who go out more (goout) would tend to have higher alcohol consumption (high_use)
+
+## Exploring the chosen variables
+
+```{r, warning=FALSE, message=FALSE}
+library(patchwork)
+library(tidyverse)
+library(finalfit)
+```
+
+### Alcohol use and gender
+
+```{r}
+data %>% 
+  summary_factorlist(dependent   = "high_use", 
+                     explanatory = "sex")
+```
+
+The cross tabulation above reveals that among 195 female students in the data, 41 of them have high alcohol consumption. Meanwhile, among 175 male students in the data, 70 of them have high alcohol consumption. Among students who have high alcohol consumption, 63.1 percent are male. We will next visualize this with plots.
+
+```{r}
+#count plot
+t1 <- data %>% 
+  ggplot(aes(x = sex, fill = high_use)) + 
+  geom_bar() + 
+  theme(legend.position = "none")+ 
+  theme(legend.position = "bottom")+
+  labs(x = "Gender (sex)")
+t1 <- t1 + scale_fill_discrete(name = "High use of alcohol")
+
+#proportion plot
+t2 <- data %>% 
+  ggplot(aes(x = sex, fill = high_use)) + 
+  geom_bar(position = "fill") + 
+  ylab("proportion")+ 
+  theme(legend.position = "none")+
+  labs(x = "Gender (sex)")
+ 
+t1+t2
+```
+
+From the bar plot above, we can see that even though we have more female students in the data, the number of male students with high alcohol consumption is higher. This is more apparent in the proportion plot, where we can see that the proportion of students with high alcohol consumption is a lot higher in male students compared to female students.
+
+### Alcohol use and school absences
+
+```{r}
+data %>% 
+  summary_factorlist(dependent   = "high_use", 
+                     explanatory = "absences")
+```
+
+Students with high alcohol consumption on average has around 6.4 absences, while students with lower alcohol consumption on average has 3.7 absences. Next, we will also compare the distribution of each groups with box plots.
+
+```{r}
+data %>% 
+  ggplot(aes(x = absences, y = high_use)) +
+  geom_boxplot(aes(colour=high_use))+
+  labs(x = "Number of school absences (absences)", 
+       y = "High use of alcohol")+
+  theme(legend.position = "none")
+```
+
+Students with high alcohol consumption have a higher school absences median compared to students with lower use of alcohol. Both groups have quite skewed data, which means that most students have very few absences but there are some students who have very high number of absences.
+
+### Alcohol use and study time
+
+For better presentation of the data, I will first recode the variable:
+
+```{r}
+data <- data %>%
+  mutate(studytime2 = studytime %>% factor() %>% 
+           fct_recode("<2 hours" = "1", "2-5 hours" = "2", 
+                      "5-10 hours" = "3", ">10 hours" = "4"))
+```
+
+```{r}
+#cross tabulation
+data %>% 
+  summary_factorlist(dependent   = "high_use", 
+                     explanatory = "studytime2")
+```
+
+Among students who have high alcohol consumption, 51.4 percent spend 2-5 hours/week studying and 37.8 percent spend less than 2 hours studying. In total, 89.2 percent of students with high alcohol consumption spend 5 hours or less per week for studying, which is quite a high number. Next, we will visualize this with plots.
+
+```{r}
+#count plot
+f1 <- data %>% 
+  ggplot(aes(x = studytime2, fill = high_use)) + 
+  geom_bar() + 
+  theme(legend.position = "none")+ 
+  theme(legend.position = "bottom")+
+  labs(x = "Time spent on studying weekly")
+f1 <- f1 + scale_fill_discrete(name = "High use of alcohol")
+
+#proportion plot
+f2 <- data %>% 
+  ggplot(aes(x = studytime2, fill = high_use)) + 
+  geom_bar(position = "fill") + 
+  ylab("proportion")+ 
+  theme(legend.position = "none")+
+  labs(x = "Time spent on studying weekly")
+ 
+f1+f2
+```
+
+Most students spent 2-5 hours weekly for studying. Students in this group also have the highest count of students with high alcohol consumption, but according to the proportion plot, students who spend lest than 2 hours for studying have the highest proportion of students with high alcohol consumption. Meanwhile, the proportion of students with high alcohol consumption is not very different between the group of students who study for 5-10 hours/week and students who spend more than 10 hours/week to study.
+
+### Alcohol use and going out
+
+For better presentation of the data, I will first recode the variable:
+
+```{r}
+data <- data %>%
+  mutate(goout2 = goout %>% factor() %>% 
+           fct_recode("very rarely" = "1", "rarely" = "2", 
+                      "medium" = "3", "often" = "4", "very often" = "5"))
+```
+
+```{r}
+#cross tabulation
+data %>% 
+  summary_factorlist(dependent   = "high_use", 
+                     explanatory = "goout2")
+```
+
+Among students with high alcohol consumption, 34.2 percent go out often with their friends and 28.8 percent go out very often. From this table, we can already see that the proportion of students with high alcohol consumption is higher in groups of students who go out more often, but we will check this with plots.
+
+```{r}
+#count plot
+g1 <- data %>% 
+  ggplot(aes(x = goout2, fill = high_use)) + 
+  geom_bar() + 
+  theme(legend.position = "none")+ 
+  theme(legend.position = "bottom")+
+  labs(x = "Going out with friends")
+g1 <- g1 + scale_fill_discrete(name = "High use of alcohol")
+
+#proportion plot
+g2 <- data %>% 
+  ggplot(aes(x = goout2, fill = high_use)) + 
+  geom_bar(position = "fill") + 
+  ylab("proportion")+ 
+  theme(legend.position = "none")+
+  labs(x = "Going out with friends")
+ 
+g1+g2
+```
+
+In the proportion plot, we can see that the proportion of students with high alcohol consumption gets higher in groups of students who go out more. The difference is subtle between the groups of students who go out less often, but in groups of students who go out often or very often, the proportion is very high.
+
+## Logistic regression
+
+### Summary
+
+```{r}
+# find the model with glm()
+# I will treat all explanatory variables as factors except for absences
+m <- glm(high_use ~ sex + absences + studytime2 + goout2, data = data, family = "binomial")
+
+# print out a summary of the model
+summary(m)
+```
+
+According to the p-value and the positive estimate, male students significantly have higher tendency to have high alcohol consumption (p-value = 0.0014). The number of absences was also found to be a significant predictor to high alcohol consumption (p-value = 0.0007). Meanwhile, students who spend 5 hours or more for studying each week were found to be significantly less likely to have high alcohol consumption at 0.1 level compared to students who study less than 2 hours/week (p-value = 0.062 for students who study 5-10 hours/week and 0.065 for students who study more than 10 hours/week). Students who go out often or very often are significantly more likely to have high alcohol consumption compared to students who go out very rarely (p-value = 0.003 for students who go out often and 0.001 for students who go out very often).
+
+### Odds ratio and confidence interval
+
+```{r}
+# compute odds ratios (OR)
+OR <- coef(m) %>% exp
+
+# compute confidence intervals (CI)
+CI <- confint(m) %>% exp()
+
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)
+```
+
+The table above presents the odds ratio for each variable in the model and its confidence interval.
+
+1.  Male students are 2.45 (CI = 1.42 - 4.27) times more likely to have high alcohol consumption compared to female students. This finding supports our original hypothesis.
+
+2.  For each increase in the number of school absences, the students are 1.08 (CI = 1.04 - 1.13) times more likely to have high alcohol consumption. This finding also supports our original hypothesis.
+
+3.  We found a very weak evidence of a relationship between time spent on studying and high alcohol consumption. The only group within the study time variable that has a confidence interval that do not cross 1 is the group of students who study for more than 10 hours a week. The students in this group are 3.25 (CI = 1.002 - 12.82) times less likely to have high alcohol consumption compared to students who study for less than 2 hours/week. I flipped the odds (1/x) to have a more intuitive interpretation. Meanwhile, every other groups in this variable have a confidence interval that crosses 1, which means that from this model, it is unclear if they are significantly less likely to have high alcohol consumption.
+
+4.  Compared to students who very rarely go out, students who go out often are 8.24 (CI = 2.31 - 41.33) times more likely to have higher alcohol consumption. Students who go out very often are 10.7 (CI = 2.89 - 54.87) times more likely to have higher alcohol consumption. Meanwhile, it is not apparent from the model if students who go out moderately or rarely are significantly more likely to have high alcohol consumption compared to students who very rarely go out. In general, this finding goes in line with our original hypothesis.
+
+## Exploring the predictive power
+
+I will use all variables since they are all significant at least at 0.1 level.
+
+```{r}
+# predict() the probability of high_use
+probabilities <- predict(m, type = "response")
+
+# add the predicted probabilities to data
+data <- mutate(data, probability = probabilities)
+
+# use the probabilities to make a prediction of high_use
+data <- mutate(data, prediction = probabilities > 0.5)
+
+# tabulate the target variable versus the predictions
+table(high_use = data$high_use, prediction = data$prediction)
+```
+
+Among 294 students who are predicted to not have high alcohol consumption, 239 are predicted correctly. Meanwhile, among 76 students who are predicted to have high alcohol consumption, 56 are predicted correctly. Next we will visualize this with a plot.
+
+```{r}
+#count plot
+p1 <- data %>% 
+  ggplot(aes(x = prediction, fill = high_use)) + 
+  geom_bar() + 
+  theme(legend.position = "none")+ 
+  theme(legend.position = "bottom")+
+  labs(x = "Model Prediction")
+p1 <- p1 + scale_fill_discrete(name = "High use of alcohol")
+
+#proportion plot
+p2 <- data %>% 
+  ggplot(aes(x = prediction, fill = high_use)) + 
+  geom_bar(position = "fill") + 
+  ylab("proportion")+ 
+  theme(legend.position = "none")+
+  labs(x = "Model Prediction")
+ 
+p1+p2
+```
+
+From the proportion plot, we can see that most of the students predicted to have high alcohol consumption do have a high alcohol consumption in the data, and vice versa. Next, we will compute the total proportion of inaccurately classified individuals.
+
+```{r}
+# define a loss function (average prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data
+train_er <- loss_func(class = data$high_use, prob = data$probability)
+train_er
+```
+
+The proportion of wrong predictions is 20.27 percent, which is a lot better than simple guessing strategy (50 percent).
+
+## 10-fold cross validation
+
+```{r, warning=FALSE, message=FALSE}
+library(boot)
+```
+
+```{r}
+cv <- cv.glm(data = data, cost = loss_func, glmfit = m, K = 10)
+
+# average number of wrong predictions in the cross validation
+test_er <- cv$delta[1]
+test_er
+```
+
+The average number of wrong predictions in the cross validation was around 22 percent, which is a little lower than the model in the Exercise set (26 percent).
+
+## Cross validation comparison
+
+```{r}
+# model with 3 variables
+m3 <- glm(high_use ~ sex + absences + goout2, data = data, family = "binomial")
+probabilities3 <- predict(m3, type = "response")
+data <- mutate(data, probability3 = probabilities3)
+data <- mutate(data, prediction3 = probabilities3 > 0.5)
+train_er3 <- loss_func(class = data$high_use, prob = data$probability3)
+cv3 <- cv.glm(data = data, cost = loss_func, glmfit = m3, K = 10)
+test_er3 <- cv3$delta[1]
+
+# model with 2 variables
+m2 <- glm(high_use ~ sex + absences, data = data, family = "binomial")
+probabilities2 <- predict(m2, type = "response")
+data <- mutate(data, probability2 = probabilities2)
+data <- mutate(data, prediction2 = probabilities2 > 0.5)
+train_er2 <- loss_func(class = data$high_use, prob = data$probability2)
+cv2 <- cv.glm(data = data, cost = loss_func, glmfit = m2, K = 10)
+test_er2 <- cv2$delta[1]
+
+# model with 1 variable
+m1 <- glm(high_use ~ absences, data = data, family = "binomial")
+probabilities1 <- predict(m1, type = "response")
+data <- mutate(data, probability1 = probabilities1)
+data <- mutate(data, prediction1 = probabilities1 > 0.5)
+train_er1 <- loss_func(class = data$high_use, prob = data$probability1)
+cv1 <- cv.glm(data = data, cost = loss_func, glmfit = m1, K = 10)
+test_er1 <- cv1$delta[1]
+
+#plotting
+compare <- data.frame(model = c("4 Var", "3 Var", "2 Var", "1 Var", 
+                                "4 Var", "3 Var", "2 Var", "1 Var"),
+                      error = c(train_er, train_er3, train_er2, train_er1,
+                                test_er, test_er3, test_er2, test_er1),
+                      type = c("Training Error", "Training Error",
+                               "Training Error", "Training Error",
+                               "Testing Error", "Testing Error",
+                               "Testing Error", "Testing Error"))
+
+compare %>% 
+  ggplot(aes(x = model, y = error, group = type)) +
+  geom_line(aes(colour = type))+
+  scale_x_discrete(limits = rev) +
+  labs(x = "Number of variables",
+       y = "Error rate")+
+  geom_text(
+    label=round(compare$error, digits=2),
+    check_overlap = T)
+```
+
+Generally, both testing and training error is higher as the number of variables in the model gets lower. This is not surprising as models with higher number of (appropriate) variables would tend to have better prediction. However, we see a dip in testing error rate at three variables compared to a model with four variables. This may mean that the fourth variable we add to the model did not help better the prediction much, so it may be better to use the three variables model instead.
