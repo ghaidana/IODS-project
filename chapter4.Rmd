@@ -186,7 +186,7 @@ For each observation in the dataset (for each town in Boston), LDA computes the 
 
 -   Coefficients of linear discrimination shows the coefficients of the first, second, and third discriminant function. We use these functions to discriminate the groups.
 
--   Proportion of trace is the percentage of separation achieved by each discriminant function. So, the first discrimination function 94.79 percent of separation.
+-   Proportion of trace is the percentage of separation achieved by each discriminant function. So, the first discrimination function achieves around 94 percent of separation.
 
 ```{r}
 # the function for lda biplot arrows
@@ -227,7 +227,7 @@ lda.pred <- predict(lda.fit, newdata = test)
 table(correct = correct_classes, predicted = lda.pred$class)
 ```
 
-Here, we have the cross tabulation of the real and predicted categories. Ideally, the data should all belong to the same groups (towns with low crime rate should be predicted to have low crime rate). Most of the towns are classified correctly, but some are classified incorrectly. For example, out of 27 towns with high crime rate, 26 are predicted to have high crime rate while 1 town is predicted to have medium high crime rate.
+Here, we have the cross tabulation of the real and predicted categories. Ideally, the data should all belong to the same groups (towns with low crime rate should be predicted to have low crime rate). Most of the towns are classified correctly, but some are classified incorrectly. We can count the number of observations that are classified correctly by summing the diagonal line (upper left to bottom right) of the cross tabulation. The observations outside of the diagonal line are not classified correctly.
 
 ## K-means algorithm
 
