@@ -22,7 +22,7 @@ colnames(data)
 This week, we are working with the "Student Performance Data Set" from the UCI Machine Learning Repository. This data was made to study student performance. It contains 35 variables from 370 students in two Portugese high schools. The data was collected from school reports and questionnaires. The variables in this data include:
 
 | Variable Name | Description                                                                                                                                            |
-|----------------|--------------------------------------------------------|
+|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | school        | The student's school ("GP" (Gabriel Pereira) or "MS" (Mousinho da Silveira))                                                                           |
 | sex           | The student's sex ("F" or "M")                                                                                                                         |
 | age           | The student's age (numeric from 15-22)                                                                                                                 |

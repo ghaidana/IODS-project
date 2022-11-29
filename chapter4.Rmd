@@ -1,0 +1,355 @@
+---
+title: "chapter4"
+author: "Ghaida Azzahra"
+date: "2022-11-28"
+output: html_document
+---
+
+# Assignment 4: Clustering and classification
+
+```{r}
+date()
+```
+
+## Setting up
+
+```{r, message=FALSE, warning=FALSE}
+# access the libraries
+library(MASS)
+
+# load the data
+data("Boston")
+```
+
+## Exploring the data
+
+### Dataset overview
+
+```{r}
+dim(Boston)
+str(Boston)
+```
+
+This week we are working with the "Housing Values in Suburbs of Boston" data. This data describes housing values in 506 suburbs (observations) of Boston and other variables related to it. In total, the data has 14 variables which includes:
+
+| Variable Name | Description                                                                      |
+|----------------|--------------------------------------------------------|
+| crim          | per capita crime rate per town (numeric)                                         |
+| zn            | proportion of residential land zoned for lots over 25,000 sq.ft (numeric)        |
+| indus         | proportion of non-retail business acres per town (numeric)                       |
+| chas          | Charles River dummy variable (integer, "1" if tract bounds river; "0" otherwise) |
+| nox           | nitrogen oxides concentration (parts per 10 million)                             |
+| rm            | average number of rooms per dwelling (numeric)                                   |
+| age           | proportion of owner-occupied units built prior to 1940 (numeric)                 |
+| dis           | weighted mean of distances to five Boston employment centres (numeric)           |
+| rad           | index of accessibility to radial highways (integer)                              |
+| tax           | full-value property-tax rate per \$10,000 (numeric)                              |
+| ptratio       | pupil-teacher ratio by town (numeric)                                            |
+| black         | `1000(`B~k~−0.63)^2^ where B~k~ is the proportion of blacks by town (numeric)    |
+| lstat         | lower status of the population (percent)                                         |
+| medv          | median value of owner-occupied homes in \$1000s (numeric)                        |
+
+### Summary
+
+```{r}
+summary(Boston)
+```
+
+-   Crime rate ranges from 0.006 - 88.97. The median (0.26) and the average (3.6) are very different, and the maximum value (88.97) is also quite far from the third quantile (3.7). This means that most of the towns in Boston have very low crime rate, but there are some towns that has very high crime rate and brings up the average.
+
+-   Similar with crime rate, variable zn (proportion of residential land zone for lots over 25,000 sq ft) also has a very skewed distribution. It ranges from 0 to 100. The median lies at 0 while the average is 11.36. It seems like the proportion of residential land zone for most of the towns is 0, but some towns have very high proportion.
+
+-   Proportion of non-retail business acres per town (indus) ranges from 0.46 to 27.74 and averages at 11.14.
+
+-   The variable chas (Charles River dummy variable) is categorical, so it only has 2 values: 0 and 1. The very low average tells us that the value for this variable is 0 for most of the town in this dataset.
+
+-   Nitrogen oxides concentration (nox) ranges from 0.385 to 0.871 and averages at 0.554.
+
+-   The average number of rooms per dwelling (rm) ranges from 3.5 to 8.7 and averages at 6.3.
+
+-   The proportion of owner-occupied units built prior to 1940 (age) ranges from 2.9 to 100 and averages at 68.57.
+
+-   The weighted mean of distances to five Boston employment centres (dis) ranges from 1.13 to 12.13 and averages at 3.79.
+
+-   Index of accessibility to radial highways (rad) ranges from 1 to 24 and averages at 9.5.
+
+-   Full-value property-tax rate per \$10,000 (tax) ranges from 187 to 711 and averages at 408.2.
+
+-   The pupil-teacher ratio by town (ptratio) ranges from 12.6 to 22 and averages at 18.46.
+
+-   The proportion of blacks (to be exact it is actually `1000(`B~k~−0.63)^2^ where B~k~ is the proportion of blacks by town) ranges from 0.32 to 396.9 and averages at 356.67.
+
+-   Lower status of the population (lstat) ranges from 1.73 to 37.97 and averages at 12.65.
+
+-   The median value of owner-occupied homes (in thousand dollars) ranges from 5 to 50 and averages at 22.53.
+
+### Graphical overview
+
+I would use the ggpairs() function instead of pairs() and corrplot() functions to have a more compact result. I will also divide the variables into two graphs to have a clearer visualization. We will later work with the crime variable as the dependent variable, so I will focus on it. Because we are using housing-related variables to classify crime rate, the interpretations would be a little weird! I also found the variables to be quite complicated, it is hard to express them in simpler words.
+
+```{r, message=FALSE, warning=FALSE}
+#accessing the libraries
+library(ggplot2)
+library(GGally)
+```
+
+```{r}
+ggpairs(Boston[1:7], mapping = aes(), lower = list(combo = wrap("facethist", bins = 20)))
+```
+
+Confirming the observations we made at the previous section, we can see that crime rate variable (crim) and proportion of residential land (zn) show an extremely skewed distribution. The scatter plot and the correlation coefficient show a low and negative correlation (-0.2) between crime rate and proportion residential land (zn). Similar relationship can be seen between crime rate and average number of rooms (rm). Meanwhile, crime rate has a positive correlation to proportion of non-retail business acres per town (indus, coef = 0.407), nitrogen oxides concentration (nox, coef - 0.421), and proportion of owner-occupied units built prior to 1940 (age, coef = 0.353).
+
+```{r}
+ggpairs(Boston, columns = c("crim", "dis", "rad", "tax", "ptratio", 
+                            "black", "lstat", "medv"), mapping = aes(),
+        lower = list(combo = wrap("facethist", bins = 20)))
+```
+
+Crime rate is negatively correlated with the weighted mean of distances to five Boston employment centres (dis, coef = -0.38), proportion of black (black, coef = -0.385), and median value of owner-occupied homes (medv, coef = -0.388). Meanwhile, it has a positive relationship with index of accessibility to radial highways (rad, coef = 0.626), full-value property-tax rate (tax, coef = 0.583), pupil-teacher ratio (ptratio, coef = 0.29) and lower status of the population (lstat, coef = 0.456).
+
+## Wrangling
+
+### Standardize the dataset
+
+```{r}
+# center and standardize variables
+boston_scaled <- scale(Boston)
+
+# change the object to data frame
+boston_scaled <- as.data.frame(boston_scaled)
+
+# summaries of the scaled variables
+summary(boston_scaled)
+```
+
+We standardize the variables to have them all on the same scale. Now, since we have standardized the dataset, all variables have 0 as the average value. They should also have 1 as the standard deviation.
+
+### Categorizing crime rate
+
+We will categorize crime rate into four categories: "low", "med_low", "med-high", and "high". We will use the quantiles as the break points for the categorization. Then, we will replace the original crime rate variable (crim) with the new categorized variable (crime).
+
+```{r}
+# create a quantile vector of crim and print it
+bins <- quantile(boston_scaled$crim)
+
+# create a categorical variable 'crime'
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label = c("low", "med_low", "med_high", "high"))
+
+# remove original crim from the dataset
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+
+# add the new categorical value to scaled data
+boston_scaled <- data.frame(boston_scaled, crime)
+```
+
+### Divide the data into train and test dataset
+
+Now, we will divide the data into two: train dataset and test dataset. The train dataset will have 80% of the original dataset, while the test dataset will have the remaining 20%. The train dataset will be used to build our model while the test dataset will be used to test our model.
+
+```{r, message = FALSE, warning = FALSE}
+library(dplyr)
+library(MASS)
+library(patchwork)
+```
+
+```{r}
+# number of rows in the Boston dataset 
+n <- nrow(boston_scaled)
+
+# choose randomly 80% of the rows
+ind <- sample(n,  size = n * 0.8)
+
+# create train set
+train <- boston_scaled[ind,]
+
+# create test set 
+test <- boston_scaled[-ind,]
+```
+
+## Linear discriminant analysis
+
+### Modeling
+
+```{r}
+# linear discriminant analysis
+lda.fit <- lda(crime ~., data = train)
+
+# print the lda.fit object
+lda.fit
+```
+
+For each observation in the dataset (for each town in Boston), LDA computes the probability of belonging to each crime rate group. Then, they will be allocated to the group with the highest probability score.
+
+-   Prior probabilities of groups shows the proportion of each group in the data. Since we divided the data using the quantiles and the training set is chosen randomly, the prior probabilities of the groups should not differ much.
+
+-   Group means show the average of each variable in each group. It is a little hard to interpret directly since the variables are already standardized, but we can see that some variables are showing a descending or ascending trend. For example, we can see that the average of rad variable (index of accessibility to radial highways) gets higher in groups with higher crime rate.
+
+-   Coefficients of linear discrimination shows the coefficients of the first, second, and third discriminant function. We use these functions to discriminate the groups.
+
+-   Proportion of trace is the percentage of separation achieved by each discriminant function. So, the first discrimination function 94.79 percent of separation.
+
+```{r}
+# the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes as numeric
+classes <- as.numeric(train$crime)
+
+# plot the lda results
+plot(lda.fit, dimen = 2, col = classes, pch = classes)
+lda.arrows(lda.fit, myscale = 2)
+```
+
+The x axis shows the score from the first discriminant function (LD1) and the y axis shows the score from the second discriminant function (LD2). There are some amount of overlaps between the groups. So, if we calculate the discriminant score of a town using the first discriminant function (LD1) and get a high LD1 score (above 4), most probably that town would be categorized as "high" crime rate. The arrows represent each predictor variables. Longer arrow represents higher coefficients in the discriminant function (it is scaled twice as big so we can see the arrows better). We can see that rad variable (index of accessibility to radial highways) is the most discriminating variable and it has positive coefficients in both the first (LD1) and the second (LD2) discriminant functions.
+
+## Testing
+
+We will now predict the crime rate classification in our testing set with our LDA model. Then, we will compare the result to the real classification.
+
+```{r}
+# save the correct classes from test data
+correct_classes <- test$crime
+
+# remove the crime variable from test data
+test <- dplyr::select(test, -crime)
+
+# predict classes with test data
+lda.pred <- predict(lda.fit, newdata = test)
+
+# cross tabulate the results
+table(correct = correct_classes, predicted = lda.pred$class)
+```
+
+Here, we have the cross tabulation of the real and predicted categories. Ideally, the data should all belong to the same groups (towns with low crime rate should be predicted to have low crime rate). Most of the towns are classified correctly, but some are classified incorrectly. For example, out of 27 towns with high crime rate, 26 are predicted to have high crime rate while 1 town is predicted to have medium high crime rate.
+
+## K-means algorithm
+
+### Finding the optimal number of clusters
+
+```{r}
+#reloding Boston dataset
+data("Boston")
+
+#standardize
+boston_scaled <- scale(Boston)
+boston_scaled <- as.data.frame(boston_scaled)
+
+
+# euclidean distance matrix
+dist_eu <- dist(boston_scaled)
+
+set.seed(123)
+
+# determine the number of clusters
+k_max <- 10
+
+# calculate the total within sum of squares
+twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled, k)$tot.withinss})
+
+# visualize the results
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+```
+
+We need to look for the point where the WCSS value changes most significantly. In this graph, the optimal number of cluster seem to be 2.
+
+### Run the algorithm with the optimal number of clusters
+
+```{r}
+# k-means clustering
+km <- kmeans(boston_scaled, centers = 2)
+
+# plot the Boston dataset with clusters
+pairs(boston_scaled, col = km$cluster)
+```
+
+We divided the data into two clusters, expressed with different colors in the graph. In some variables, the clusters are defined quite clearly while in some others the difference is less clear. For example, if we look at the graphs of crim (crime rate) variable, it is quite clear that towns with low crime rate are clustered together. Meanwhile, the clusters are less clear with dis (weighted mean of distances to five Boston employment centres) variable. Although there is a tendency that the red cluster is within the lower ranges, the separation is not very clear.
+
+## Bonus k-means
+
+### Creating the clusters
+
+```{r}
+#reloding Boston dataset
+data("Boston")
+
+#standardize
+boston_scaled <- scale(Boston)
+boston_scaled <- as.data.frame(boston_scaled)
+
+# k-means clustering
+km <- kmeans(boston_scaled, centers = 4)
+
+#extracting the result
+boston_scaled <- cbind(boston_scaled, cluster = km$cluster)
+```
+
+### LDA
+
+```{r}
+# linear discriminant analysis
+fit <- lda(cluster ~., data = boston_scaled)
+
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes as numeric
+classes <- as.numeric(boston_scaled$cluster)
+
+# plot the lda results
+plot(fit, dimen = 2, col = classes, pch = classes)
+lda.arrows(fit, myscale = 3)
+```
+
+There are some overlap, but in general the data is separated quite clearly. Variable chas (Charles River dummy variable) seem to be the most influential separators among the variables in the dataset. Other influential separators are rad (index of accessibility to radial highways) and dis (weighted mean of distances to five Boston employment centres).
+
+## Super bonus
+
+### Create the matrix product
+
+```{r}
+model_predictors <- dplyr::select(train, -crime)
+# check the dimensions
+dim(model_predictors)
+dim(lda.fit$scaling)
+# matrix multiplication
+matrix_product <- as.matrix(model_predictors) %*% lda.fit$scaling
+matrix_product <- as.data.frame(matrix_product)
+```
+
+### Create 3D plot
+
+```{r, warning = FALSE, message=FALSE}
+library(plotly)
+```
+
+```{r}
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color = train$crime)
+```
+
+```{r}
+model_predictors <- dplyr::select(boston_scaled, -cluster)
+# check the dimensions
+dim(model_predictors)
+dim(fit$scaling)
+# matrix multiplication
+matrix_product <- as.matrix(model_predictors) %*% fit$scaling
+matrix_product <- as.data.frame(matrix_product)
+#plot
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color = boston_scaled$cluster)
+
+```
+
+The two plot differs because the classification is different. The first plot is classifying the murder rate, while the second one is classifying the cluster. The classification in the second plot is much clearer, probably because the clusters were made based on the whole data itself. However, in both plots the data seem to be separated into two big groups.

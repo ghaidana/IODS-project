@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 # Assignment 2: Regression and Model Validation
 
 -   This week, we are learning about regression and model validation. In this exercise, we are using a data from the International Survey of Approaches to Learning. In this survey, the students were asked to assess themselves on the scale of 1-5 about various statements related to their learning (ex: "I organize my study time carefully to make the best use of it"). The questions could be classified into three different learning approaches: strategic learning, surface learning, and deep learning. Beside the questions about the student's learning approach, the data also includes questions about the student's attitude on statistics, age, exam points, and gender.
