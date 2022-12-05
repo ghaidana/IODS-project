@@ -33,7 +33,7 @@ str(Boston)
 This week we are working with the "Housing Values in Suburbs of Boston" data. This data describes housing values in 506 suburbs (observations) of Boston and other variables related to it. In total, the data has 14 variables which includes:
 
 | Variable Name | Description                                                                      |
-|----------------|--------------------------------------------------------|
+|---------------|----------------------------------------------------------------------------------|
 | crim          | per capita crime rate per town (numeric)                                         |
 | zn            | proportion of residential land zoned for lots over 25,000 sq.ft (numeric)        |
 | indus         | proportion of non-retail business acres per town (numeric)                       |

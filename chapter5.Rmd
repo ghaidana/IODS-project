@@ -1,0 +1,187 @@
+---
+title: "chapter5"
+author: "Ghaida Azzahra"
+date: "2022-12-05"
+output: html_document
+---
+
+# Assignment 5: Dimensionality reduction techniques
+
+```{r}
+date()
+```
+
+## Setting up
+
+```{r, warning=FALSE, message=FALSE}
+human <- readRDS("human.rds")
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(stringr)
+library(corrplot)
+library(GGally)
+library(ggplot2)
+library(FactoMineR)
+```
+
+## Exploring the data
+
+This week, we are working with the 'human' dataset. We have wrangled this dataset previously and obtained a new dataset that contains 8 variables from 155 countries. The variables in this dataset includes:
+
+| Variable name | Description                                                       |
+|---------------|---------------------------------------------------------|
+| Edu2.FM       | Ratio of female/male proportion with at least secondary education |
+| Labo.FM       | Ratio of female/male labor participation rate                     |
+| Life.Exp      | Life expectancy at birth                                          |
+| Edu.Exp       | Expected years of schooling                                       |
+| GNI           | Gross National Income                                             |
+| Mat.Mor       | Maternal mortality                                                |
+| Ado.Birth     | Adolescent birth rate                                             |
+| Parli.F       | Female share of parliamentary seats                               |
+
+Besides these variables, we also have the country names as the row name.
+
+```{r}
+summary(human)
+```
+
+-   The ratio of female vs. male proportion with at least secondary education (Edu2.FM) ranges from 0.17 to 1.49 and averages at 0.85. This means that on average, the proportion of women with at least secondary education is lower than men.
+
+-   The ratio of female vs. male labor participation rate (Labo.FM) ranges from 0.18 to 1.03 and averages at 0.70. This means that on average, women have lower labor participation rate.
+
+-   Life expectancy at birth (Life.Exp) ranges from 49 to 83.5 and averages at 71.65.
+
+-   Expected years of schooling (Edu.Exp) ranges from 5.4 to 20.20 and averages at 13.18.
+
+-   GNI ranges from 581 to 123124 and averages at 17628. The quantiles and the difference between the mean and median values seem to indicate that the distribution of this variable is very skewed, with most countries having lower values but there are a few countries with extremely high GNI that bring up the average quite significantly.
+
+-   Maternal mortality rate (Mat.Mor) ranges from 1 to 1100 and averages at 149. The quantiles and the difference between the mean and median values seem to indicate that the distribution of this variable is very skewed, with most countries having low maternal mortalities but there are a few countries with extremely high maternal mortality that bring up the average quite significantly.
+
+-   Adolescent birth rate (Ado.Birth) ranges from 0.6 to 204.8 and averages at 47.16. This data also seem to bit a bit skewed.
+
+-   Female share of parliamentary seats (Parli.F) ranges from 0 to 57.5 and averages at 20.91. This means that there is at least one country that has zero share for females in the parliament and there is at least one country that has slightly more female than male in the parliament, but on average female has around 21 percent share in the parliament.
+
+```{r}
+ggpairs(human)
+cor(human) %>% corrplot()
+```
+
+The distribution plots seem to confirm our previous observation, where GNI, maternal mortality, and adolescent birth rate having very skewed distributions. The scatter plot, correlation coefficient, and the correlation matrix plot tell us about the relationship between the variables in the data. We see that some variables have quite a strong negative or positive relationships. For example, adolescent birth rate is positively correlated with maternal mortality and negatively correlated with ratio of female (vs. male) proportion with at least secondary education, life expectancy at birth, expected years of schooling, and GNI.
+
+## Principal component analysis
+
+### Non-standardized data
+
+```{r, warning=FALSE}
+pca_human <- prcomp(human)
+s <- summary(pca_human)
+round(100*s$importance[2, ], digits = 1)
+```
+
+The first principal component captured all the variance in the data.
+
+```{r, warning=FALSE}
+biplot(pca_human, choices = 1:2, cex = c(0.5, 0.7), col = c("grey40", "deeppink2"))
+```
+
+The plot tells us that GNI is the most (or in this case, the only) valuable variable for clustering the data. However, this might be because GNI has a very wide range with very large values (from the summary, we see that it ranges from 581 to 123124) compared to all other variables. This may cause the influence of GNI to become magnified disproportionately, and the influence of other variables to be minimized. This is why we should standardize the data to put all variable into the same scale regardless of their measurements.
+
+### Standardized data
+
+```{r}
+human_std <- scale(human)
+
+pca_human_std <- prcomp(human_std)
+s_std <- summary(pca_human_std)
+round(100*s_std$importance[2, ], digits = 1)
+```
+
+Now, we have eight principal components. The first component captured 53.6 percent of the variability in the data, while the second component captured 16.2 percent of the variability in the data. Together, they would already account for 69.8 percent of the variation in the data. Now, we will look at the biplot of these two principal components.
+
+```{r}
+biplot(pca_human_std, choices = 1:2, cex = c(0.3, 0.6), col = c("grey40", "deeppink2"))
+```
+
+Compared to the biplot made from the unstandardized data, now we can see the influence of each variable more clearly. The direction of the arrows tells us that female share of parliamentary seats (Parli.F) and ratio of female vs male labor force participation are more influential for the second principal component, while the other variables are more influential for the first principal component. Maternal mortality (Mat.Mor) and adolescent birth rate (Ado.Birth) are negatively correlated with GNI, expected years of schooling (Exp.Edu), life expectancy (Life.Exp), and ratio of female vs male proportion with at least secondary education (Edu2.FM). This make sense since girls who got pregnant early tend to drop out of their school, and the other way around: girls who did not continue their education tend to be married and get pregnant earlier. Adolescent pregnancy and birth are also riskier, which may contribute to the increase of maternal mortality and the decrease of life expectancy. We can also observe how each country stands related to the principal components or the variables. For example, Mozambique in the upper right corner have higher maternal mortality, adolescent birth, female ratio in the labor force, and female share in the parliament, and lower life expectancy, GNI, female ratio with secondary education, or expected years of schooling.
+
+### Interpretation of the principal components
+
+The variables that are more influential at the first principal component are:
+
+-   Maternal mortality (Mat.Mor)
+
+-   Adolescent birth rate (Ado.Birth)
+
+-   GNI
+
+-   Expected years of schooling (Exp.Edu)
+
+-   Life expectancy (Life.Exp)
+
+-   Ratio of female vs male proportion with at least secondary education (Edu2.FM)
+
+These variables seem to mostly relate to the overall wellbeing and development of a nation, so I will interpret this principal component as the "Wellbeing" component.
+
+Meanwhile, the variables that are more influential for the second principal component are:
+
+-   Female share of parliamentary seats (Parli.F)
+
+-   Ratio of female vs male labor force participation (Labo.FM)
+
+These variables seem to mostly relate to the political and economic power held by the female population in a country, so I will interpret this principal component as the "Female empowerment" component.
+
+## Tea dataset
+
+```{r}
+#reading the data and convert variables to factors
+tea <- read.csv("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/tea.csv", stringsAsFactors = TRUE)
+```
+
+### Exploring the data
+
+```{r}
+dim(tea)
+str(tea)
+View(tea)
+```
+
+This data contains 36 variables obtained from 300 individuals/observations. The variables include information on the respondents' personal details, how they drink tea, and their perception of the tea. We will filter some variables to simplify the analysis.
+
+```{r}
+keep_columns <- c("Tea", "How", "work", "sugar", "where", "lunch")
+tea_time <- select(tea, keep_columns)
+pivot_longer(tea_time, cols = everything()) %>% 
+  ggplot(aes(value)) + facet_wrap("name", scales = "free")+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+```
+
+-   Most respondents drink their tea outside of work.
+
+-   Most respondents drink their tea without any addition (milk, lemon, or other).
+
+-   Most respondents do not drink their tea for lunch.
+
+-   About half of the respondents add sugar to their tea
+
+-   Most respondents drink Earl Grey tea
+
+-   Most respondents get their tea from the chain stores
+
+### Multiple correspondence analysis
+
+```{r}
+mca <- MCA(tea_time, graph = FALSE)
+
+summary(mca)
+
+```
+
+Dimension 1 explains around 14.46 percent of the variation, while dimension 2 explains around 13.33 percent of the variation in the data. Together, they explain around 27.79 percent of the variation in the data, while the remaining 72.21 percent are explained by the other dimensions. In the individuals section, we can see the coordinates of the first 10 observations in each axis/dimension. The next section describes similar thing, only for the categories of the variables in the data. We can also see the contribution of the variables to each dimension. Tea types (Tea) seem to be the most important variable in explaining the variation in the data since it has high contribution values in both dimension 1 and 2.
+
+```{r}
+plot(mca, invisible=c("ind"), graph.type = "classic", habillage = "quali")
+```
+
+The plot above can be used to identify which variables are most correlated with each dimension. The further a category is from the origin point, the more discriminating they are. The category 'other' (people who add something other than milk or lemon to their tea) is located very high up in the graph and a little bit to the left, which means that it is strongly related to the second dimension and moderately related to the first dimension. The angle made by connecting two categories to the origin point describes their relationship. Sharp angles means positive correlation while blunt angles means negative correlation. A 90 degrees angle means no correlation between the two categories. For example, we can see that people who add other something other thank milk or lemon to their tea tend to drink black tea and do not add sugar.
