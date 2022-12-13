@@ -162,7 +162,35 @@ After removing the outliers, the distribution of each group changed. This change
 
 ### Statistical testing
 
-We will not do a two-sample t-test as there are more than 2 groups in this data.
+#### Two sample t-test
+
+```{r}
+ttest_data <- RATSL8S1 %>%                   
+  filter(Group %in% c("1", "2"))
+
+# Perform a two-sample t-test
+t.test(mean ~ Group, data = ttest_data, var.equal = TRUE)
+```
+
+```{r}
+ttest_data <- RATSL8S1 %>%                   
+  filter(Group %in% c("1", "3"))
+
+# Perform a two-sample t-test
+t.test(mean ~ Group, data = ttest_data, var.equal = TRUE)
+```
+
+```{r}
+ttest_data <- RATSL8S1 %>%                   
+  filter(Group %in% c("2", "3"))
+
+# Perform a two-sample t-test
+t.test(mean ~ Group, data = ttest_data, var.equal = TRUE)
+```
+
+The low p-value indicates that the average weight of each group is significantly different than each other. This is unsurprising since we already observes a difference between those groups in the box plot.
+
+#### Anova
 
 ```{r}
 # Add the baseline from the original data as a new variable to the summary data
@@ -176,7 +204,7 @@ fit <- lm(mean~ baseline + Group, data = RATSL8S2)
 anova(fit)
 ```
 
-The baseline is significant, which means that the original weight of the rats do affect the weight increase. On the other hand, Group is significant at 0.1 level, which means that we found a weak evidence that the diet difference affects the weight increase in rats.
+The baseline is significant, which means that the original weight of the rats do affect the weight increase. On the other hand, Group is significant at 0.1 level, which means that we found a weak evidence that the diet difference affects the weight in rats.
 
 ## BPRS data
 
