@@ -30,7 +30,7 @@ library(FactoMineR)
 This week, we are working with the 'human' dataset. We have wrangled this dataset previously and obtained a new dataset that contains 8 variables from 155 countries. The variables in this dataset includes:
 
 | Variable name | Description                                                       |
-|---------------|---------------------------------------------------------|
+|---------------|-------------------------------------------------------------------|
 | Edu2.FM       | Ratio of female/male proportion with at least secondary education |
 | Labo.FM       | Ratio of female/male labor participation rate                     |
 | Life.Exp      | Life expectancy at birth                                          |
